@@ -1,0 +1,154 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Enum Role removed for SQLite compatibility
+// Roles are: ADMIN, PIMPINAN, AKADEMIK, KESISWAAN, KEUANGAN, AKUNTANSI, HRD, GURU, SISWA, ORANG_TUA
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("SISWA")
+  accounts      Account[]
+  sessions      Session[]
+  student       Student?
+  classes       Class[]    @relation("TeacherClasses")
+  schedules     Schedule[] @relation("TeacherSchedules")
+  attendance    Attendance[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Student {
+  id            String   @id @default(cuid())
+  namaLengkap   String
+  nisn          String?
+  tempatLahir   String
+  tanggalLahir  DateTime
+  jenisKelamin  String
+  alamat        String
+  asalSekolah   String
+  kelas         String
+  namaAyah      String
+  namaIbu       String
+  noHpOrtu      String
+  programBimbel String
+  status        String   @default("MENUNGGU_PEMBAYARAN") // MENUNGGU_PEMBAYARAN, AKTIF, NONAKTIF, ALUMNI
+  
+  user          User?    @relation(fields: [userId], references: [id])
+  userId        String?  @unique // Optional link to a User account
+  grades        Grade[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Class {
+  id        String   @id @default(cuid())
+  name      String
+  program   String
+  level     String   // SD, SMP, SMA
+  teacherId String?  // Optional relation to User (Guru)
+  teacher   User?    @relation("TeacherClasses", fields: [teacherId], references: [id])
+  status    String   @default("ACTIVE") // ACTIVE, INACTIVE
+
+  schedules Schedule[]
+  grades    Grade[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Schedule {
+  id        String   @id @default(cuid())
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  day       String   // Senin, Selasa, etc.
+  startTime String
+  endTime   String
+  subject   String
+  room      String?
+  teacherId String?  // Optional override teacher for specific schedule
+  teacher   User?    @relation("TeacherSchedules", fields: [teacherId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Grade {
+  id        String   @id @default(cuid())
+  studentId String
+  classId   String
+  subject   String
+  type      String   // UH, UTS, UAS, TUGAS
+  score     Float
+  semester  String   @default("GANJIL")
+  
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime @default(now())
+  checkIn   DateTime @default(now())
+  checkOut  DateTime?
+  status    String   @default("PRESENT") // PRESENT, LATE, PERMIT, ABSENT
+  notes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

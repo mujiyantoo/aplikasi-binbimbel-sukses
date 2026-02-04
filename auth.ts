@@ -1,0 +1,62 @@
+import NextAuth from "next-auth"
+import { PrismaAdapter } from "@auth/prisma-adapter"
+import { PrismaClient } from "@prisma/client"
+import Credentials from "next-auth/providers/credentials"
+import bcrypt from "bcryptjs"
+import { z } from "zod"
+
+const prisma = new PrismaClient()
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+    providers: [
+        Credentials({
+            credentials: {
+                email: { label: "Email", type: "email" },
+                password: { label: "Password", type: "password" },
+            },
+            authorize: async (credentials) => {
+                const parsedCredentials = z
+                    .object({ email: z.string().email(), password: z.string().min(6) })
+                    .safeParse(credentials)
+
+                if (parsedCredentials.success) {
+                    const { email, password } = parsedCredentials.data
+                    const user = await prisma.user.findUnique({
+                        where: { email },
+                    })
+
+                    if (!user || !user.password) return null
+
+                    const passwordsMatch = await bcrypt.compare(password, user.password)
+
+                    if (passwordsMatch) return user
+                }
+
+                console.log("Invalid credentials")
+                return null
+            },
+        }),
+    ],
+    callbacks: {
+        async jwt({ token, user }) {
+            if (user) {
+                token.role = user.role
+                token.id = user.id as string
+            }
+            return token
+        },
+        async session({ session, token }) {
+            if (session.user && token) {
+                session.user.role = token.role as string
+                session.user.id = token.id as string
+            }
+            return session
+        }
+    },
+    pages: {
+        signIn: '/login',
+    },
+    session: {
+        strategy: "jwt",
+    },
+})
