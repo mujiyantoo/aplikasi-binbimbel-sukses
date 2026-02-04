@@ -50,3 +50,5 @@ A comprehensive web-based management system for tutoring centers (Bimbel), built
 ## Deployment
 
 See `deployment_guide.md` for instructions on Vercel or VPS deployment.
+
+*Last Updated for Deployment: 2026-02-05*
