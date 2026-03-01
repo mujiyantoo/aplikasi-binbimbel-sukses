@@ -20,114 +20,53 @@ export default auth((req) => {
         return NextResponse.redirect(new URL("/dashboard", req.url))
     }
 
-    // Ambil role dari session
+    // Ambil role dari session (format: Owner, Admin, Pegawai)
     const role = (req.auth?.user as { role?: string })?.role ?? ""
 
     // ================================================================
-    // PATH KHUSUS PIMPINAN/OWNER — hanya PIMPINAN yang boleh akses
+    // ROLE: Owner — boleh akses SEMUA halaman dashboard
     // ================================================================
-    const pimpinanOnlyPaths = [
-        "/dashboard/pimpinan",
-        "/dashboard/akuntansi",
-    ]
-
-    // ================================================================
-    // PATH YANG BOLEH DIAKSES GURU/PEGAWAI
-    // ================================================================
-    const pegawaiAllowedPaths = [
-        "/dashboard/akademik",
-        "/dashboard/kesiswaan",
-    ]
-
-    // ================================================================
-    // ROLE: PIMPINAN (Owner) — boleh akses semua halaman dashboard
-    // ================================================================
-    if (role === "PIMPINAN") {
+    if (role === "Owner") {
         return
     }
 
     // ================================================================
-    // ROLE: ADMIN — boleh semua kecuali halaman khusus PIMPINAN
+    // ROLE: Admin — boleh semua KECUALI halaman khusus Owner
     // ================================================================
-    if (role === "ADMIN") {
-        const isPimpinanOnly = pimpinanOnlyPaths.some((p) =>
-            pathname.startsWith(p)
-        )
-        if (isPimpinanOnly) {
+    if (role === "Admin") {
+        const ownerOnlyPaths = [
+            "/dashboard/pimpinan",
+            "/dashboard/akuntansi",
+            "/dashboard/laporan",
+            "/dashboard/pengaturan",
+            "/dashboard/payroll",
+        ]
+        const isOwnerOnly = ownerOnlyPaths.some((p) => pathname.startsWith(p))
+        if (isOwnerOnly) {
             return NextResponse.redirect(new URL("/dashboard", req.url))
         }
         return
     }
 
     // ================================================================
-    // ROLE: GURU, AKADEMIK, KESISWAAN — hanya bisa akses halaman mereka
+    // ROLE: Pegawai — HANYA boleh akses halaman kinerja
     // ================================================================
-    if (["GURU", "AKADEMIK", "KESISWAAN"].includes(role)) {
+    if (role === "Pegawai") {
         if (isOnDashboard) {
-            const isAllowed = pegawaiAllowedPaths.some((p) =>
-                pathname.startsWith(p)
-            )
-            if (!isAllowed) {
-                // Redirect ke halaman pertama yang sesuai untuk role ini
+            const pegawaiAllowed =
+                pathname.startsWith("/dashboard/kinerja-saya") ||
+                pathname.startsWith("/dashboard/kinerja")
+
+            if (!pegawaiAllowed) {
                 return NextResponse.redirect(
-                    new URL("/dashboard/akademik", req.url)
+                    new URL("/dashboard/kinerja-saya", req.url)
                 )
             }
         }
         return
     }
 
-    // ================================================================
-    // ROLE: KEUANGAN, AKUNTANSI, HRD
-    // ================================================================
-    const keuanganAllowedPaths = ["/dashboard/keuangan", "/dashboard/laporan"]
-    const hrdAllowedPaths = ["/dashboard/kepegawaian"]
-
-    if (role === "KEUANGAN") {
-        if (isOnDashboard) {
-            const isAllowed = keuanganAllowedPaths.some((p) =>
-                pathname.startsWith(p)
-            )
-            if (!isAllowed) {
-                return NextResponse.redirect(
-                    new URL("/dashboard/keuangan", req.url)
-                )
-            }
-        }
-        return
-    }
-
-    if (role === "HRD") {
-        if (isOnDashboard) {
-            const isAllowed = hrdAllowedPaths.some((p) =>
-                pathname.startsWith(p)
-            )
-            if (!isAllowed) {
-                return NextResponse.redirect(
-                    new URL("/dashboard/kepegawaian", req.url)
-                )
-            }
-        }
-        return
-    }
-
-    if (role === "AKUNTANSI") {
-        if (isOnDashboard) {
-            const isAllowed =
-                pathname.startsWith("/dashboard/akuntansi") ||
-                pathname.startsWith("/dashboard/keuangan") ||
-                pathname.startsWith("/dashboard/laporan")
-
-            if (!isAllowed) {
-                return NextResponse.redirect(
-                    new URL("/dashboard/akuntansi", req.url)
-                )
-            }
-        }
-        return
-    }
-
-    // Role tidak dikenal atau SISWA, redirect ke login
+    // Role tidak dikenal, redirect ke login
     if (isOnDashboard) {
         return NextResponse.redirect(new URL("/login", req.url))
     }

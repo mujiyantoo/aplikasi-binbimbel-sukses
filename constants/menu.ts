@@ -6,7 +6,8 @@ import {
     BarChart3,
     FileText,
     LayoutDashboard,
-    ShieldCheck
+    ShieldCheck,
+    TrendingUp
 } from "lucide-react";
 
 export const menuItems = [
@@ -14,48 +15,60 @@ export const menuItems = [
         title: "Dashboard",
         href: "/dashboard",
         icon: LayoutDashboard,
-        roles: ["ADMIN", "PIMPINAN"]
+        roles: ["Admin", "Owner"]
     },
     {
         title: "Kesiswaan",
         href: "/dashboard/kesiswaan",
         icon: Users,
-        roles: ["ADMIN", "KESISWAAN", "AKADEMIK", "GURU"]
+        roles: ["Admin", "Owner"]
     },
     {
         title: "Akademik",
         href: "/dashboard/akademik",
         icon: GraduationCap,
-        roles: ["ADMIN", "AKADEMIK", "GURU", "SISWA"]
+        roles: ["Admin", "Owner"]
     },
     {
         title: "Kepegawaian",
         href: "/dashboard/kepegawaian",
         icon: ShieldCheck,
-        roles: ["ADMIN", "HRD", "PIMPINAN"]
+        roles: ["Admin", "Owner"]
     },
     {
         title: "Keuangan",
         href: "/dashboard/keuangan",
         icon: Banknote,
-        roles: ["ADMIN", "KEUANGAN", "PIMPINAN", "AKUNTANSI"]
+        roles: ["Admin", "Owner"]
+    },
+    {
+        title: "Kinerja",
+        href: "/dashboard/kinerja",
+        icon: TrendingUp,
+        roles: ["Owner", "Pegawai"]
+    },
+    {
+        title: "Kinerja Saya",
+        href: "/dashboard/kinerja-saya",
+        icon: TrendingUp,
+        roles: ["Pegawai"]
     },
     {
         title: "Akuntansi",
         href: "/dashboard/akuntansi",
         icon: BookOpen,
-        roles: ["ADMIN", "AKUNTANSI", "PIMPINAN"]
+        roles: ["Owner"]
     },
     {
         title: "Laporan",
         href: "/dashboard/laporan",
         icon: FileText,
-        roles: ["ADMIN", "PIMPINAN", "AKADEMIK", "KEUANGAN"]
+        roles: ["Owner"]
     },
     {
         title: "Pimpinan",
         href: "/dashboard/pimpinan",
         icon: BarChart3,
-        roles: ["ADMIN", "PIMPINAN"]
+        roles: ["Owner"]
     },
 ];
